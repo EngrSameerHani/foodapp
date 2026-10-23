@@ -1,0 +1,52 @@
+{
+  "cli": {
+    "version": ">= 10.0.0",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "http://10.0.2.2:8000/api/v1",
+        "EXPO_PUBLIC_WS_URL": "ws://10.0.2.2:8000/ws",
+        "EXPO_PUBLIC_MOCK_MODE": "true"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://REPLACE_WITH_YOUR_BACKEND_URL/api/v1",
+        "EXPO_PUBLIC_WS_URL": "wss://REPLACE_WITH_YOUR_BACKEND_URL/ws",
+        "EXPO_PUBLIC_MOCK_MODE": "false"
+      }
+    },
+    "preview-mock": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://example.com/api/v1",
+        "EXPO_PUBLIC_WS_URL": "wss://example.com/ws",
+        "EXPO_PUBLIC_MOCK_MODE": "true"
+      }
+    },
+    "production": {
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://REPLACE_WITH_YOUR_BACKEND_URL/api/v1",
+        "EXPO_PUBLIC_WS_URL": "wss://REPLACE_WITH_YOUR_BACKEND_URL/ws",
+        "EXPO_PUBLIC_MOCK_MODE": "false"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}
