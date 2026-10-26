@@ -1,0 +1,40 @@
+# Fly.io configuration for Zawadi Food API
+app = "zawadi-food-api"
+primary_region = "iad"   # Washington DC — change to nearest: lhr=London, sin=Singapore, cdg=Paris
+
+[build]
+  dockerfile = "Dockerfile"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 25
+    soft_limit = 20
+
+[[vm]]
+  memory = "256mb"
+  cpu_kind = "shared"
+  cpus = 1
+
+[env]
+  PORT = "8000"
+  ALGORITHM = "HS256"
+  ACCESS_TOKEN_EXPIRE_MINUTES = "15"
+  REFRESH_TOKEN_EXPIRE_DAYS = "30"
+  OTP_EXPIRE_SECONDS = "300"
+  OTP_MAX_ATTEMPTS = "3"
+  OTP_RATE_LIMIT_WINDOW_SECONDS = "600"
+  OTP_RATE_LIMIT_MAX_REQUESTS = "3"
+  EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send"
+  PER_KM_RATE = "0.50"
+  SERVICE_FEE = "1.99"
+  TAX_RATE = "0.08"
+  CORS_ORIGINS = '["*"]'
+  MEDIA_DIR = "./media"
+  PYTHON_VERSION = "3.12.0"
