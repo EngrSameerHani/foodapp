@@ -36,8 +36,9 @@ class Settings(BaseSettings):
     SERVICE_FEE: float = 1.99
     TAX_RATE: float = 0.08
 
-    # Stored as a plain string, validated below
-    CORS_ORIGINS: List[str] = ["http://localhost:8081", "exp://localhost:8081"]
+    # CORS_ORIGINS — NOT set via env var to avoid parsing issues.
+    # Change this list directly for production restrictions.
+    CORS_ORIGINS: List[str] = ["*"]
     MEDIA_DIR: str = "./media"
     PYTHON_VERSION: str = "3.12.0"
 
