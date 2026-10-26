@@ -6,17 +6,20 @@ import os
 
 
 def _fix_db_url(url: str) -> str:
-    """Convert postgres:// → postgresql+asyncpg:// and remove unsupported sslmode param."""
+    """Convert postgres:// → postgresql+asyncpg:// and handle SSL for Fly.io internal network."""
+    import re
     if url.startswith("postgres://"):
         url = url.replace("postgres://", "postgresql+asyncpg://", 1)
     elif url.startswith("postgresql://") and "+asyncpg" not in url:
         url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
-    # asyncpg doesn't accept sslmode= — strip it
-    import re
+    # Remove sslmode / ssl query params — asyncpg uses different SSL config
     url = re.sub(r"[?&]sslmode=[^&]*", "", url)
     url = re.sub(r"[?&]ssl=[^&]*", "", url)
-    # Clean up trailing ? or &
     url = re.sub(r"[?&]$", "", url)
+    # Fly.io internal network (.flycast) — disable SSL
+    if ".flycast" in url:
+        sep = "&" if "?" in url else "?"
+        url = url + sep + "ssl=false"
     return url
 
 
