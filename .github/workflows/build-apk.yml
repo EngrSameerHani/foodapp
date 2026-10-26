@@ -36,9 +36,13 @@ jobs:
 
       - name: Build APK
         working-directory: mobile-frontend
+        env:
+          EAS_NO_VCS: 1
         run: eas build --platform android --profile preview-mock --non-interactive --no-wait
 
       - name: APK Ready
         run: |
-          echo "Build submitted! Download in 10-15 min:"
+          echo "=========================================="
+          echo "Build submitted! Download APK in 10-15 min:"
           echo "https://expo.dev/accounts/sameer-hani/projects/zawadi-food-mobile/builds"
+          echo "=========================================="
