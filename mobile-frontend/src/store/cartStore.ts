@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { LocalCartItem } from '@/types';
-import { localId } from '@/utils';
+import type { LocalCartItem } from '../types';
+import { localId } from '../utils';
 
 const KEY = 'zf_cart';
 const SERVICE_FEE = 1.99;

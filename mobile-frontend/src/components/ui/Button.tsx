@@ -1,7 +1,7 @@
 import React from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, ViewStyle } from 'react-native';
-import { useTheme } from '@/hooks/useTheme';
-import { radius, spacing, typography } from '@/theme';
+import { useTheme } from '../../hooks/useTheme';
+import { radius, spacing, typography } from '../../theme';
 
 type Variant = 'primary' | 'outline' | 'ghost' | 'danger';
 type Size = 'sm' | 'md' | 'lg';

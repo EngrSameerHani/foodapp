@@ -1,4 +1,4 @@
-import type { Restaurant, MenuCategory } from '@/types';
+import type { Restaurant, MenuCategory } from '../types';
 
 // ─── Menus ───────────────────────────────────────────────────────────────────
 

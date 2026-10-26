@@ -1,8 +1,8 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { useTheme } from '@/hooks/useTheme';
-import { radius, typography } from '@/theme';
-import type { OrderStatus } from '@/types';
+import { useTheme } from '../../hooks/useTheme';
+import { radius, typography } from '../../theme';
+import type { OrderStatus } from '../../types';
 
 type Variant = 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral';
 

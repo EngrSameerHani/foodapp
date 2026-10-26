@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { User, UserRole } from '@/types';
+import type { User, UserRole } from '../types';
 
 const KEY_USER = 'zf_user';
 const KEY_TOKEN = 'zf_token';

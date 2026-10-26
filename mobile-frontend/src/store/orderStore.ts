@@ -3,9 +3,9 @@
  * Simulates place/accept/reject/advance status transitions locally.
  */
 import { create } from 'zustand';
-import type { Order, OrderStatus } from '@/types';
-import { MOCK_ORDERS, MOCK_RESTAURANT_ORDERS } from '@/data';
-import { localId } from '@/utils';
+import type { Order, OrderStatus } from '../types';
+import { MOCK_ORDERS, MOCK_RESTAURANT_ORDERS } from '../data';
+import { localId } from '../utils';
 
 interface OrderState {
   customerOrders:   Order[];

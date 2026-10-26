@@ -1,8 +1,8 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '@/hooks/useTheme';
-import { spacing, typography } from '@/theme';
+import { useTheme } from '../../hooks/useTheme';
+import { spacing, typography } from '../../theme';
 import { Button } from './Button';
 
 interface Props {

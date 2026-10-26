@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, View, ViewStyle } from 'react-native';
-import { useTheme } from '@/hooks/useTheme';
-import { radius, spacing } from '@/theme';
+import { useTheme } from '../../hooks/useTheme';
+import { radius, spacing } from '../../theme';
 
 export function Skeleton({ width = '100%', height = 16, br = radius.sm, style }: { width?: number | string; height?: number; br?: number; style?: ViewStyle }) {
   const { colors } = useTheme();

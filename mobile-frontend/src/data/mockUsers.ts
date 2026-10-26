@@ -1,4 +1,4 @@
-import type { User } from '@/types';
+import type { User } from '../types';
 
 /** Demo accounts. In mock mode OTP is always 123456. */
 export const MOCK_USERS: User[] = [

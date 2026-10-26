@@ -4,8 +4,8 @@
  */
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
-import { useTheme } from '@/hooks/useTheme';
-import { radius, spacing, typography } from '@/theme';
+import { useTheme } from '../../hooks/useTheme';
+import { radius, spacing, typography } from '../../theme';
 
 export interface ToastRef {
   show: (msg: string, type?: 'success' | 'error' | 'info') => void;

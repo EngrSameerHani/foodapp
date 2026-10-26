@@ -2,17 +2,17 @@
  * Unified service layer.
  * Every exported function checks isMockMode → returns mock data or calls the real API.
  */
-import { useAppStore } from '@/store/appStore';
+import { useAppStore } from '../store/appStore';
 import { http } from './apiClient';
 import {
   MOCK_RESTAURANTS, getMockRestaurant,
   MOCK_USERS, findMockUser,
   MOCK_VOUCHERS,
-} from '@/data';
+} from '../data';
 import type {
   Restaurant, User, Order, Address,
   VoucherValidation, RiderProfile,
-} from '@/types';
+} from '../types';
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 const isMock = () => useAppStore.getState().isMockMode;
