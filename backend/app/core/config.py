@@ -1,15 +1,11 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import field_validator
 from typing import List
 import json
 import os
 
 
 def _fix_db_url(url: str) -> str:
-    """
-    Render (and most cloud platforms) provide a standard postgres:// URL.
-    SQLAlchemy async requires postgresql+asyncpg://.
-    This function converts automatically so deployment works without manual editing.
-    """
     if url.startswith("postgres://"):
         url = url.replace("postgres://", "postgresql+asyncpg://", 1)
     elif url.startswith("postgresql://") and "+asyncpg" not in url:
@@ -40,14 +36,27 @@ class Settings(BaseSettings):
     SERVICE_FEE: float = 1.99
     TAX_RATE: float = 0.08
 
+    # Stored as a plain string, validated below
     CORS_ORIGINS: List[str] = ["http://localhost:8081", "exp://localhost:8081"]
     MEDIA_DIR: str = "./media"
-
-    # Python version hint for cloud platforms
     PYTHON_VERSION: str = "3.12.0"
 
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def parse_cors(cls, v):
+        if isinstance(v, str):
+            v = v.strip()
+            # Handle JSON array string: ["*"] or ["url1","url2"]
+            if v.startswith("["):
+                try:
+                    return json.loads(v)
+                except json.JSONDecodeError:
+                    pass
+            # Handle comma-separated: * or http://a.com,http://b.com
+            return [item.strip() for item in v.split(",") if item.strip()]
+        return v
+
     def model_post_init(self, __context) -> None:
-        # Auto-fix DATABASE_URL for cloud platforms that give postgres:// URLs
         object.__setattr__(self, "DATABASE_URL", _fix_db_url(self.DATABASE_URL))
 
 
