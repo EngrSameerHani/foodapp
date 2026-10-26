@@ -14,41 +14,31 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 20
+      - name: Setup Node 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      - name: Setup Expo + EAS
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+          packager: npm
 
       - name: Install dependencies
         working-directory: mobile-frontend
         run: npm install --legacy-peer-deps
 
-      - name: Install EAS CLI globally
-        run: npm install -g eas-cli@latest
-
-      - name: Verify token and project config
+      - name: Build APK
         working-directory: mobile-frontend
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: |
-          echo "EAS CLI version:"
-          eas --version
-          echo "Expo project config:"
-          npx expo config --type public 2>&1 || true
-
-      - name: Build Android APK
-        working-directory: mobile-frontend
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: eas build --platform android --profile preview-mock --non-interactive --no-wait
 
-      - name: Done
+      - name: APK Ready
         run: |
-          echo "=========================================="
-          echo "✅ Build submitted to EAS cloud servers!"
-          echo "📱 Download APK (ready in ~10-15 min) at:"
+          echo "Build submitted! Download in 10-15 min:"
           echo "https://expo.dev/accounts/sameer-hani/projects/zawadi-food-mobile/builds"
-          echo "=========================================="
