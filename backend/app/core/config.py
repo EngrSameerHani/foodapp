@@ -6,10 +6,17 @@ import os
 
 
 def _fix_db_url(url: str) -> str:
+    """Convert postgres:// → postgresql+asyncpg:// and remove unsupported sslmode param."""
     if url.startswith("postgres://"):
         url = url.replace("postgres://", "postgresql+asyncpg://", 1)
     elif url.startswith("postgresql://") and "+asyncpg" not in url:
         url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    # asyncpg doesn't accept sslmode= — strip it
+    import re
+    url = re.sub(r"[?&]sslmode=[^&]*", "", url)
+    url = re.sub(r"[?&]ssl=[^&]*", "", url)
+    # Clean up trailing ? or &
+    url = re.sub(r"[?&]$", "", url)
     return url
 
 
