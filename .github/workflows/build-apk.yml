@@ -5,7 +5,7 @@ on:
     branches: [main]
     paths:
       - 'mobile-frontend/**'
-  workflow_dispatch:   # also allows manual trigger from GitHub Actions tab
+  workflow_dispatch:
 
 jobs:
   build:
@@ -16,7 +16,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -27,15 +27,11 @@ jobs:
         working-directory: mobile-frontend
         run: npm install --legacy-peer-deps
 
-      - name: Setup EAS
-        uses: expo/expo-github-action@v8
-        with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
 
       - name: Build APK
         working-directory: mobile-frontend
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: eas build --platform android --profile preview-mock --non-interactive
-
-      - name: Print download link
-        run: echo "✅ Build complete — download APK from https://expo.dev/accounts/sameer-hani/projects/zawadi-food-mobile/builds"
