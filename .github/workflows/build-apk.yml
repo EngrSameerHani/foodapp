@@ -20,18 +20,38 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: mobile-frontend/package-lock.json
 
       - name: Install dependencies
         working-directory: mobile-frontend
         run: npm install --legacy-peer-deps
 
-      - name: Install EAS CLI
-        run: npm install -g eas-cli
+      - name: Install EAS CLI globally
+        run: npm install -g eas-cli@latest
 
-      - name: Build APK
+      - name: Verify EAS CLI
+        run: eas --version
+
+      - name: Check EXPO_TOKEN is set
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "❌ EXPO_TOKEN secret is not set!"
+            echo "Go to: https://github.com/EngrSameerHani/foodapp/settings/secrets/actions"
+            echo "Add secret named EXPO_TOKEN with your token from https://expo.dev/settings/access-tokens"
+            exit 1
+          else
+            echo "✅ EXPO_TOKEN is set"
+          fi
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build Android APK
         working-directory: mobile-frontend
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: eas build --platform android --profile preview-mock --non-interactive
+        run: eas build --platform android --profile preview-mock --non-interactive --no-wait
+
+      - name: Build submitted
+        run: |
+          echo "✅ Build submitted to EAS!"
+          echo "📱 Check build progress and download APK at:"
+          echo "https://expo.dev/accounts/sameer-hani/projects/zawadi-food-mobile/builds"
