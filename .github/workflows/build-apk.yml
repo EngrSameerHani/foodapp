@@ -7,10 +7,19 @@ on:
       - 'mobile-frontend/**'
       - '.github/workflows/build-apk.yml'
   workflow_dispatch:
+    inputs:
+      profile:
+        description: 'EAS build profile'
+        required: false
+        default: 'preview'
+        type: choice
+        options:
+          - preview
+          - preview-mock
 
 jobs:
   build:
-    name: Build APK (preview-mock)
+    name: Build Android APK
     runs-on: ubuntu-latest
 
     steps:
@@ -38,11 +47,12 @@ jobs:
         working-directory: mobile-frontend
         env:
           EAS_NO_VCS: 1
-        run: eas build --platform android --profile preview-mock --non-interactive --no-wait
+        run: eas build --platform android --profile ${{ github.event.inputs.profile || 'preview' }} --non-interactive --no-wait
 
-      - name: APK Ready
+      - name: Done
         run: |
           echo "=========================================="
-          echo "Build submitted! Download APK in 10-15 min:"
+          echo "✅ Build submitted!"
+          echo "📱 Download APK at:"
           echo "https://expo.dev/accounts/sameer-hani/projects/zawadi-food-mobile/builds"
           echo "=========================================="
