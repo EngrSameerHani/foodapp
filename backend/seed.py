@@ -11,7 +11,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
 from app.core.config import settings
-from app.core.database import Base
+from app.core.database import Base, _clean_url, _is_internal
 from app.models.user import User
 from app.models.restaurant import Restaurant, MenuCategory, MenuItem, ItemVariation
 from app.models.rider import RiderProfile, RiderLocation
@@ -19,8 +19,11 @@ from app.models.voucher import Voucher
 from app.models.address import Address
 from app.models.cart import Cart
 
-
-ENGINE = create_async_engine(settings.DATABASE_URL, echo=False)
+ENGINE = create_async_engine(
+    _clean_url(settings.DATABASE_URL),
+    echo=False,
+    connect_args={"ssl": False} if _is_internal else {},
+)
 SessionLocal = async_sessionmaker(ENGINE, expire_on_commit=False)
 
 
