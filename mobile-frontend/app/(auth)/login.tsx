@@ -1,19 +1,22 @@
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  KeyboardAvoidingView, Platform, Pressable,
+  ScrollView, StyleSheet, Text, TextInput, View,
+} from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme }   from '../../src/hooks/useTheme';
-import { Button, Toast } from '../../src/components/ui';
-import { useAppStore } from '../../src/store/appStore';
+import { useTheme } from '../../src/hooks/useTheme';
 import { authService } from '../../src/services';
-import { spacing, typography, radius } from '../../src/theme';
+import { useAppStore } from '../../src/store/appStore';
+import { palette, spacing, radius, typography, shadows } from '../../src/theme';
+import { Toast } from '../../src/components/ui';
 import type { UserRole } from '../../src/types';
 
-const ROLES: { label: string; value: UserRole; emoji: string }[] = [
-  { label: 'Customer',   value: 'customer',          emoji: '🛒' },
-  { label: 'Restaurant', value: 'restaurant_owner',  emoji: '🍽️' },
-  { label: 'Rider',      value: 'rider',             emoji: '🏍️' },
+const ROLES: { label: string; value: UserRole; icon: string }[] = [
+  { label: 'Customer',   value: 'customer',         icon: '🛒' },
+  { label: 'Restaurant', value: 'restaurant_owner', icon: '🍽️' },
+  { label: 'Rider',      value: 'rider',            icon: '🏍️' },
 ];
 
 export default function Login() {
@@ -37,59 +40,90 @@ export default function Login() {
   return (
     <SafeAreaView style={[s.root, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={s.inner} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+
           {/* Logo */}
-          <View style={s.logo}>
-            <View style={[s.logoBox, { backgroundColor: colors.primary }]}>
-              <Text style={s.logoLetter}>Z</Text>
+          <View style={s.logoWrap}>
+            <View style={s.logoCircle}>
+              <Text style={s.logoIcon}>🍴</Text>
             </View>
-            <Text style={[s.appName, { color: colors.textPrimary }]}>Zawadi Food</Text>
-            <Text style={[s.tagline, { color: colors.textSecondary }]}>Enter your phone number to continue</Text>
+            <Text style={[s.appName, { color: colors.textPrimary }]}>FoodZap</Text>
+            <Text style={[s.appSub, { color: colors.textSecondary }]}>Good Food. Faster.</Text>
           </View>
 
-          {/* Mock mode banner */}
-          {isMockMode && (
-            <View style={[s.mockBanner, { backgroundColor: colors.info + '18', borderColor: colors.info }]}>
-              <Ionicons name="information-circle-outline" size={16} color={colors.info} />
-              <Text style={[s.mockText, { color: colors.info }]}>
-                Demo mode — OTP is always <Text style={{ fontWeight: '700' }}>123456</Text>
-              </Text>
-            </View>
-          )}
+          {/* Card */}
+          <View style={[s.card, { backgroundColor: colors.surface }, shadows.md]}>
+            <Text style={[s.cardTitle, { color: colors.textPrimary }]}>Welcome Back 👋</Text>
+            <Text style={[s.cardSub, { color: colors.textSecondary }]}>Sign in to continue</Text>
 
-          {/* Role selector */}
-          <View style={s.roles}>
-            {ROLES.map((r) => (
-              <Pressable key={r.value} onPress={() => setRole(r.value)}
-                style={[s.roleBtn, { borderColor: role === r.value ? colors.primary : colors.border, backgroundColor: role === r.value ? colors.primary + '12' : colors.surface }]}>
-                <Text style={s.roleEmoji}>{r.emoji}</Text>
-                <Text style={[s.roleLabel, { color: role === r.value ? colors.primary : colors.textSecondary }]}>{r.label}</Text>
-              </Pressable>
-            ))}
+            {/* Mock mode pill */}
+            {isMockMode && (
+              <View style={[s.mockPill, { backgroundColor: colors.primaryBg }]}>
+                <Ionicons name="information-circle" size={14} color={palette.orange} />
+                <Text style={[s.mockText, { color: palette.orange }]}>
+                  Demo mode — OTP is <Text style={{ fontWeight: '700' }}>123456</Text>
+                </Text>
+              </View>
+            )}
+
+            {/* Role selector */}
+            <Text style={[s.label, { color: colors.textSecondary }]}>I am a</Text>
+            <View style={s.roleRow}>
+              {ROLES.map((r) => {
+                const active = role === r.value;
+                return (
+                  <Pressable key={r.value} onPress={() => setRole(r.value)}
+                    style={[s.roleBtn, {
+                      borderColor: active ? palette.orange : colors.border,
+                      backgroundColor: active ? palette.orange : colors.surface,
+                    }]}>
+                    <Text style={s.roleEmoji}>{r.icon}</Text>
+                    <Text style={[s.roleLabel, { color: active ? '#fff' : colors.textSecondary }]}>
+                      {r.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            {/* Phone input */}
+            <Text style={[s.label, { color: colors.textSecondary }]}>Phone Number</Text>
+            <View style={[s.inputWrap, { borderColor: phone.length > 0 ? palette.orange : colors.border, backgroundColor: colors.inputBg }]}>
+              <Ionicons name="call-outline" size={20} color={phone.length > 0 ? palette.orange : colors.textTertiary} />
+              <TextInput
+                value={phone} onChangeText={setPhone}
+                placeholder="+1 555 000 0001"
+                placeholderTextColor={colors.textTertiary}
+                keyboardType="phone-pad"
+                style={[s.input, { color: colors.textPrimary }]}
+                returnKeyType="done"
+                onSubmitEditing={send}
+              />
+            </View>
+
+            {/* CTA */}
+            <Pressable onPress={send} disabled={loading}
+              style={[s.cta, { opacity: loading ? 0.7 : 1 }]}>
+              {loading
+                ? <Text style={s.ctaText}>Sending…</Text>
+                : <><Text style={s.ctaText}>Send OTP</Text>
+                    <Ionicons name="arrow-forward" size={18} color="#fff" /></>}
+            </Pressable>
+
+            {/* Demo hint */}
+            {isMockMode && (
+              <View style={{ gap: 2, marginTop: spacing[2] }}>
+                <Text style={[s.demoHint, { color: colors.textTertiary }]}>Demo accounts:</Text>
+                {['+15550000001 — Customer', '+15550000010 — Restaurant', '+15550000020 — Rider'].map((n) => (
+                  <Text key={n} style={[s.demoHint, { color: colors.textSecondary }]}>  {n}</Text>
+                ))}
+              </View>
+            )}
           </View>
 
-          {/* Phone input */}
-          <View style={[s.inputRow, { borderColor: colors.border, backgroundColor: colors.surface }]}>
-            <Ionicons name="call-outline" size={20} color={colors.textSecondary} />
-            <TextInput
-              value={phone} onChangeText={setPhone}
-              placeholder="+1 555 000 0001" placeholderTextColor={colors.textTertiary}
-              keyboardType="phone-pad" style={[s.input, { color: colors.textPrimary }]}
-              returnKeyType="done" onSubmitEditing={send}
-            />
-          </View>
-
-          <Button title="Send OTP" onPress={send} loading={loading} fullWidth size="lg" style={{ marginTop: spacing[4] }} />
-
-          {/* Demo hint */}
-          {isMockMode && (
-            <View style={{ marginTop: spacing[5] }}>
-              <Text style={[s.demoHint, { color: colors.textTertiary }]}>Demo phone numbers:</Text>
-              {['+15550000001 (Customer)', '+15550000010 (Restaurant)', '+15550000020 (Rider)'].map((n) => (
-                <Text key={n} style={[s.demoHint, { color: colors.textSecondary }]}>  {n}</Text>
-              ))}
-            </View>
-          )}
+          <Text style={[s.terms, { color: colors.textTertiary }]}>
+            By continuing you agree to our Terms of Service and Privacy Policy.
+          </Text>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -98,19 +132,34 @@ export default function Login() {
 
 const s = StyleSheet.create({
   root:       { flex: 1 },
-  inner:      { flexGrow: 1, padding: spacing[6], justifyContent: 'center', gap: spacing[4] },
-  logo:       { alignItems: 'center', gap: spacing[2], marginBottom: spacing[2] },
-  logoBox:    { width: 72, height: 72, borderRadius: radius.xl, alignItems: 'center', justifyContent: 'center' },
-  logoLetter: { color: '#fff', fontSize: 36, fontWeight: '800' },
-  appName:    { fontSize: typography.sizes['2xl'], fontWeight: '700' },
-  tagline:    { fontSize: typography.sizes.base, textAlign: 'center' },
-  mockBanner: { flexDirection: 'row', alignItems: 'center', gap: 6, padding: spacing[3], borderRadius: radius.md, borderWidth: 1 },
-  mockText:   { fontSize: typography.sizes.sm, flex: 1 },
-  roles:      { flexDirection: 'row', gap: spacing[2] },
-  roleBtn:    { flex: 1, borderWidth: 1.5, borderRadius: radius.md, padding: spacing[3], alignItems: 'center', gap: 4 },
-  roleEmoji:  { fontSize: 22 },
+  scroll:     { flexGrow: 1, padding: spacing[5], justifyContent: 'center', gap: spacing[5] },
+
+  logoWrap:   { alignItems: 'center', gap: spacing[2], paddingVertical: spacing[4] },
+  logoCircle: { width: 72, height: 72, borderRadius: radius.xl, backgroundColor: palette.orange, alignItems: 'center', justifyContent: 'center', ...shadows.card },
+  logoIcon:   { fontSize: 32 },
+  appName:    { fontSize: typography.sizes['2xl'], fontWeight: '800' },
+  appSub:     { fontSize: typography.sizes.base },
+
+  card:       { borderRadius: radius['2xl'], padding: spacing[5], gap: spacing[3] },
+  cardTitle:  { fontSize: typography.sizes.xl, fontWeight: '700' },
+  cardSub:    { fontSize: typography.sizes.base, marginTop: -spacing[2] },
+
+  mockPill:   { flexDirection: 'row', alignItems: 'center', gap: spacing[1], paddingHorizontal: spacing[3], paddingVertical: spacing[2], borderRadius: radius.full },
+  mockText:   { fontSize: typography.sizes.sm },
+
+  label:      { fontSize: typography.sizes.base, fontWeight: '500' },
+
+  roleRow:    { flexDirection: 'row', gap: spacing[2] },
+  roleBtn:    { flex: 1, borderWidth: 1.5, borderRadius: radius.lg, paddingVertical: spacing[3], alignItems: 'center', gap: spacing[1] },
+  roleEmoji:  { fontSize: 20 },
   roleLabel:  { fontSize: typography.sizes.sm, fontWeight: '500' },
-  inputRow:   { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1.5, borderRadius: radius.lg, paddingHorizontal: spacing[4], paddingVertical: spacing[3] },
-  input:      { flex: 1, fontSize: typography.sizes.md },
+
+  inputWrap:  { flexDirection: 'row', alignItems: 'center', gap: spacing[2], borderWidth: 1.5, borderRadius: radius.lg, paddingHorizontal: spacing[4], paddingVertical: spacing[3] },
+  input:      { flex: 1, fontSize: typography.sizes.body },
+
+  cta:        { flexDirection: 'row', backgroundColor: palette.orange, borderRadius: radius.full, paddingVertical: spacing[4], alignItems: 'center', justifyContent: 'center', gap: spacing[2], ...shadows.card },
+  ctaText:    { color: '#fff', fontSize: typography.sizes.body, fontWeight: '700' },
+
   demoHint:   { fontSize: typography.sizes.sm, lineHeight: 20 },
+  terms:      { fontSize: typography.sizes.sm, textAlign: 'center', lineHeight: 18 },
 });
