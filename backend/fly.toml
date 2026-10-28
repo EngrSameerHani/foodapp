@@ -1,21 +1,39 @@
-# fly.toml app configuration file generated for zawadi-food-api on 2026-10-26T20:04:28+05:00
-#
-# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
-#
-
+# Zawadi Food API — Fly.io configuration
 app = 'zawadi-food-api'
 primary_region = 'iad'
 
 [build]
+  dockerfile = "Dockerfile"
+
 [http_service]
   internal_port = 8000
   force_https = true
-  auto_stop_machines = 'stop'
+  auto_stop_machines = false
   auto_start_machines = true
-  min_machines_running = 0
+  min_machines_running = 1
   processes = ['app']
 
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 50
+    soft_limit = 40
+
 [[vm]]
-  memory = '1gb'
+  memory = '256mb'
+  cpu_kind = 'shared'
   cpus = 1
-  memory_mb = 1024
+
+[env]
+  PORT = "8000"
+  ALGORITHM = "HS256"
+  ACCESS_TOKEN_EXPIRE_MINUTES = "15"
+  REFRESH_TOKEN_EXPIRE_DAYS = "30"
+  OTP_EXPIRE_SECONDS = "600"
+  OTP_MAX_ATTEMPTS = "5"
+  OTP_RATE_LIMIT_WINDOW_SECONDS = "300"
+  OTP_RATE_LIMIT_MAX_REQUESTS = "10"
+  EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send"
+  PER_KM_RATE = "0.50"
+  SERVICE_FEE = "1.99"
+  TAX_RATE = "0.08"
+  MEDIA_DIR = "./media"

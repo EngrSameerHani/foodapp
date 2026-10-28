@@ -1,5 +1,5 @@
 FROM python:3.12-slim AS base
-# cache-bust: 2026-10-27-v3
+# cache-bust: 2026-10-28-v4-no-cors-env
 
 WORKDIR /app
 
