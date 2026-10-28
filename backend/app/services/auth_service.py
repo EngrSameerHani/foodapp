@@ -56,7 +56,11 @@ async def verify_otp_and_login(phone: str, code: str, role: str, db: AsyncSessio
     if not attempt:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No OTP found. Please request a new one.")
 
-    if datetime.now(timezone.utc) > attempt.expires_at.replace(tzinfo=timezone.utc) if attempt.expires_at.tzinfo is None else attempt.expires_at:
+    # Normalize expires_at to UTC for safe comparison
+    expires = attempt.expires_at
+    if expires.tzinfo is None:
+        expires = expires.replace(tzinfo=timezone.utc)
+    if datetime.now(timezone.utc) > expires:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="OTP expired.")
 
     if attempt.attempts >= settings.OTP_MAX_ATTEMPTS:
