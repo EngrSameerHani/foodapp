@@ -3,7 +3,6 @@ from datetime import datetime, timezone
 
 from sqlalchemy import DateTime, Float, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy import JSON
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -12,12 +11,12 @@ from app.core.database import Base
 class Order(Base):
     __tablename__ = "orders"
 
-    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     order_number: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
-    customer_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("users.id"), nullable=False, index=True)
-    restaurant_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("restaurants.id"), nullable=False, index=True)
-    rider_id: Mapped[str | None] = mapped_column(UUID(as_uuid=False), ForeignKey("users.id"), index=True)
-    address_id: Mapped[str | None] = mapped_column(UUID(as_uuid=False), ForeignKey("addresses.id"))
+    customer_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id"), nullable=False, index=True)
+    restaurant_id: Mapped[str] = mapped_column(String(36), ForeignKey("restaurants.id"), nullable=False, index=True)
+    rider_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("users.id"), index=True)
+    address_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("addresses.id"))
 
     status: Mapped[str] = mapped_column(String(30), nullable=False, default="PLACED")
     # PLACED / ACCEPTED / REJECTED / PREPARING / READY_FOR_PICKUP / PICKED_UP / ON_THE_WAY / DELIVERED / FAILED / CANCELLED
@@ -55,9 +54,9 @@ class Order(Base):
 class OrderItem(Base):
     __tablename__ = "order_items"
 
-    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid.uuid4()))
-    order_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("orders.id", ondelete="CASCADE"), nullable=False, index=True)
-    item_id: Mapped[str] = mapped_column(UUID(as_uuid=False), ForeignKey("menu_items.id"), nullable=False)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    order_id: Mapped[str] = mapped_column(String(36), ForeignKey("orders.id", ondelete="CASCADE"), nullable=False, index=True)
+    item_id: Mapped[str] = mapped_column(String(36), ForeignKey("menu_items.id"), nullable=False)
     item_name: Mapped[str] = mapped_column(String(150), nullable=False)  # snapshot
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
     unit_price: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
