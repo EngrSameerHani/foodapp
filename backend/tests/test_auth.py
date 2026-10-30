@@ -77,11 +77,11 @@ async def test_wrong_otp_increments_attempts(client: AsyncClient, monkeypatch):
     monkeypatch.setattr("app.services.auth_service.generate_otp", lambda **kw: "999999")
     monkeypatch.setattr("app.core.security.generate_otp", lambda **kw: "999999")
 
-    await _request_otp(client, "+15550000002")
+    await _request_otp(client, "+19990000002")   # non-demo phone
 
     resp = await client.post(
         "/api/v1/auth/verify-otp",
-        json={"phone": "+15550000002", "code": "000000", "role": "customer"},
+        json={"phone": "+19990000002", "code": "000000", "role": "customer"},
     )
     assert resp.status_code == 400
     assert "Invalid OTP" in resp.json()["detail"]
@@ -93,7 +93,7 @@ async def test_expired_otp(client: AsyncClient, db_session: AsyncSession, monkey
     monkeypatch.setattr("app.services.auth_service.generate_otp", lambda **kw: "111111")
     monkeypatch.setattr("app.core.security.generate_otp", lambda **kw: "111111")
 
-    phone = "+15550000003"
+    phone = "+19990000003"   # non-demo phone
     await _request_otp(client, phone)
 
     # Expire the OTP manually
@@ -118,7 +118,7 @@ async def test_token_refresh(client: AsyncClient, monkeypatch):
     monkeypatch.setattr("app.services.auth_service.generate_otp", lambda **kw: "222222")
     monkeypatch.setattr("app.core.security.generate_otp", lambda **kw: "222222")
 
-    phone = "+15550000004"
+    phone = "+19990000004"   # non-demo phone
     await _request_otp(client, phone)
     login = await client.post(
         "/api/v1/auth/verify-otp",
@@ -143,7 +143,7 @@ async def test_logout_revokes_token(client: AsyncClient, monkeypatch):
     monkeypatch.setattr("app.services.auth_service.generate_otp", lambda **kw: "333333")
     monkeypatch.setattr("app.core.security.generate_otp", lambda **kw: "333333")
 
-    phone = "+15550000005"
+    phone = "+19990000005"   # non-demo phone
     await _request_otp(client, phone)
     login = await client.post(
         "/api/v1/auth/verify-otp",
@@ -163,7 +163,6 @@ async def test_logout_revokes_token(client: AsyncClient, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_rate_limiting(client: AsyncClient):
-    """4th OTP request within the window should be blocked."""
     phone = "+15550000099"
     # Reset any previous state
     otp_rate_limiter.reset(phone)
@@ -177,3 +176,28 @@ async def test_rate_limiting(client: AsyncClient):
 
     # Cleanup
     otp_rate_limiter.reset(phone)
+
+
+@pytest.mark.asyncio
+async def test_demo_login_always_works(client: AsyncClient):
+    """Demo phones always accept OTP 123456 — no DB lookup, no expiry."""
+    resp = await client.post("/api/v1/auth/request-otp", json={"phone": "+15550000001"})
+    assert resp.status_code == 200
+
+    # Correct demo OTP always works
+    resp2 = await client.post(
+        "/api/v1/auth/verify-otp",
+        json={"phone": "+15550000001", "code": "123456", "role": "customer"},
+    )
+    assert resp2.status_code == 200
+    data = resp2.json()
+    assert data["role"] == "customer"
+    assert "access_token" in data
+
+    # Wrong OTP still rejected
+    resp3 = await client.post(
+        "/api/v1/auth/verify-otp",
+        json={"phone": "+15550000001", "code": "000000", "role": "customer"},
+    )
+    assert resp3.status_code == 400
+    assert "123456" in resp3.json()["detail"]

@@ -19,9 +19,36 @@ from app.models.user import OTPAttempt, RefreshToken, User
 
 logger = logging.getLogger(__name__)
 
+# ─── Demo accounts — OTP is always 123456 ────────────────────────────────────
+DEMO_OTP = "123456"
+DEMO_PHONES = {
+    "+15550000001": "customer",
+    "+15550000002": "customer",
+    "+15550000003": "customer",
+    "+15550000004": "customer",
+    "+15550000005": "customer",
+    "+15550000010": "restaurant_owner",
+    "+15550000011": "restaurant_owner",
+    "+15550000012": "restaurant_owner",
+    "+15550000020": "rider",
+    "+15550000021": "rider",
+    "+15550000022": "rider",
+}
+
+
+def _is_demo(phone: str) -> bool:
+    return phone in DEMO_PHONES
+
+
+# ─── Request OTP ─────────────────────────────────────────────────────────────
 
 async def request_otp(phone: str, db: AsyncSession) -> dict:
-    # Invalidate any existing unused OTPs for this phone
+    if _is_demo(phone):
+        # Demo accounts: log the fixed OTP and skip DB storage
+        logger.info("📱 OTP for %s: %s  [DEMO — always 123456]", phone, DEMO_OTP)
+        return {"expires_in": settings.OTP_EXPIRE_SECONDS}
+
+    # Real accounts: invalidate old OTPs, generate new random one
     await db.execute(
         update(OTPAttempt)
         .where(OTPAttempt.phone == phone, OTPAttempt.is_used.is_(False))
@@ -29,7 +56,6 @@ async def request_otp(phone: str, db: AsyncSession) -> dict:
     )
 
     otp = generate_otp()
-    # In production replace with real SMS gateway
     logger.info("📱 OTP for %s: %s", phone, otp)
 
     expires_at = datetime.now(timezone.utc) + timedelta(seconds=settings.OTP_EXPIRE_SECONDS)
@@ -43,8 +69,30 @@ async def request_otp(phone: str, db: AsyncSession) -> dict:
     return {"expires_in": settings.OTP_EXPIRE_SECONDS}
 
 
+# ─── Verify OTP ──────────────────────────────────────────────────────────────
+
 async def verify_otp_and_login(phone: str, code: str, role: str, db: AsyncSession) -> dict:
-    # Get latest unused OTP
+    if _is_demo(phone):
+        # Demo accounts: accept only "123456", no DB lookup needed
+        if code != DEMO_OTP:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid OTP. Demo accounts always use {DEMO_OTP}.",
+            )
+        # Get or create demo user
+        user_result = await db.execute(select(User).where(User.phone == phone))
+        user: User | None = user_result.scalar_one_or_none()
+        if not user:
+            user = User(phone=phone, role=DEMO_PHONES[phone])
+            db.add(user)
+            await db.flush()
+        elif user.role != role and role in ("customer", "restaurant_owner", "rider"):
+            # Allow role override only if supplied role matches demo role
+            if role != DEMO_PHONES[phone]:
+                role = DEMO_PHONES[phone]  # enforce correct demo role
+        return await _issue_tokens(user, db)
+
+    # ── Real accounts ──
     result = await db.execute(
         select(OTPAttempt)
         .where(OTPAttempt.phone == phone, OTPAttempt.is_used.is_(False))
@@ -54,17 +102,26 @@ async def verify_otp_and_login(phone: str, code: str, role: str, db: AsyncSessio
     attempt: OTPAttempt | None = result.scalar_one_or_none()
 
     if not attempt:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No OTP found. Please request a new one.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No OTP found. Please request a new one.",
+        )
 
     # Normalize expires_at to UTC for safe comparison
     expires = attempt.expires_at
     if expires.tzinfo is None:
         expires = expires.replace(tzinfo=timezone.utc)
     if datetime.now(timezone.utc) > expires:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="OTP expired.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="OTP expired.",
+        )
 
     if attempt.attempts >= settings.OTP_MAX_ATTEMPTS:
-        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Too many attempts. Request a new OTP.")
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many attempts. Request a new OTP.",
+        )
 
     if not verify_otp(code, attempt.code_hash):
         attempt.attempts += 1
@@ -75,25 +132,22 @@ async def verify_otp_and_login(phone: str, code: str, role: str, db: AsyncSessio
             detail=f"Invalid OTP. {remaining} attempt(s) remaining.",
         )
 
-    # Mark OTP as used
     attempt.is_used = True
 
-    # Get or create user
     user_result = await db.execute(select(User).where(User.phone == phone))
     user: User | None = user_result.scalar_one_or_none()
-
     if not user:
         user = User(phone=phone, role=role)
         db.add(user)
         await db.flush()
     else:
-        # Update role if it changed (e.g. new role signup)
         if user.role != role:
             user.role = role
 
-    tokens = await _issue_tokens(user, db)
-    return tokens
+    return await _issue_tokens(user, db)
 
+
+# ─── Refresh / logout ─────────────────────────────────────────────────────────
 
 async def refresh_tokens(raw_token: str, db: AsyncSession) -> dict:
     token_hash = hash_token(raw_token)
@@ -108,10 +162,12 @@ async def refresh_tokens(raw_token: str, db: AsyncSession) -> dict:
     if not stored:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token.")
 
-    if datetime.now(timezone.utc) > (stored.expires_at.replace(tzinfo=timezone.utc) if stored.expires_at.tzinfo is None else stored.expires_at):
+    exp = stored.expires_at
+    if exp.tzinfo is None:
+        exp = exp.replace(tzinfo=timezone.utc)
+    if datetime.now(timezone.utc) > exp:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token expired.")
 
-    # Revoke old token
     stored.revoked = True
 
     user_result = await db.execute(select(User).where(User.id == stored.user_id))
