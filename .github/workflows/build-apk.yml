@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       profile:
-        description: 'EAS build profile'
+        description: 'EAS build profile (preview=real backend, preview-mock=offline demo)'
         required: false
         default: 'preview'
         type: choice
@@ -52,7 +52,12 @@ jobs:
       - name: Done
         run: |
           echo "=========================================="
-          echo "✅ Build submitted!"
-          echo "📱 Download APK at:"
+          echo "✅ Build submitted to EAS!"
+          echo "📱 Download APK (ready in ~15 min) at:"
           echo "https://expo.dev/accounts/sameer-hani/projects/zawadi-food-mobile/builds"
           echo "=========================================="
+          echo ""
+          echo "Demo login credentials:"
+          echo "  Phone: +15550000001  OTP: 123456  (Customer - Alice)"
+          echo "  Phone: +15550000010  OTP: 123456  (Restaurant - Frank)"
+          echo "  Phone: +15550000020  OTP: 123456  (Rider - Ivan)"
